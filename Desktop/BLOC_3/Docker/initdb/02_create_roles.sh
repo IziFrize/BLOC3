@@ -1,0 +1,32 @@
+#!/bin/bash
+set -e
+
+echo "👥 Création des rôles PostgreSQL..."
+
+psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-EOSQL
+  DO \$\$
+  BEGIN
+    IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = '$APP_USER') THEN
+      CREATE ROLE $APP_USER LOGIN PASSWORD '$APP_PASSWORD';
+    END IF;
+  END
+  \$\$;
+
+  DO \$\$
+  BEGIN
+    IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = '$ANALYST_USER') THEN
+      CREATE ROLE $ANALYST_USER LOGIN PASSWORD '$ANALYST_PASSWORD';
+    END IF;
+  END
+  \$\$;
+
+  DO \$\$
+  BEGIN
+    IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = '$WRITER_USER') THEN
+      CREATE ROLE $WRITER_USER LOGIN PASSWORD '$WRITER_PASSWORD';
+    END IF;
+  END
+  \$\$;
+
+  GRANT CONNECT ON DATABASE $POSTGRES_DB TO $APP_USER, $ANALYST_USER, $WRITER_USER;
+EOSQL

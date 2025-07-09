@@ -1,0 +1,39 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.env
+.env.*
+
+# PostgreSQL data (volume local)
+pgdata/
+*.sql~
+
+# Docker
+*.log
+*.pid
+docker_smartretail_pgdata/
+*.tar
+.docker/
+*.sock
+
+# VSCode or IDE
+.vscode/
+.idea/
+
+# Secrets
+initdb/04_set_encryption_key.sh
+initdb/01_prepare_encryption_key.sql
+
+# Python cache
+*.egg-info/
+dist/
+build/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# OS
+.DS_Store
+Thumbs.db

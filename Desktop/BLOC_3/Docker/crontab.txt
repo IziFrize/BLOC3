@@ -1,0 +1,2 @@
+*/2 * * * * cd /app && /usr/local/bin/python insert_data.py >> /var/log/cron.log 2>&1
+*/2 * * * * sleep 150 && cd /app && /usr/local/bin/python insert_data.py >> /var/log/cron.log 2>&1

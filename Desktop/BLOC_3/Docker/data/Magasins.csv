@@ -1,0 +1,11 @@
+magasin_id,nom,adresse,ville,code_postal,region
+1,Magasin1,Adresse1,Ville1,75095,Region3
+2,Magasin2,Adresse2,Ville2,75038,Region5
+3,Magasin3,Adresse3,Ville3,75065,Region1
+4,Magasin4,Adresse4,Ville4,75033,Region3
+5,Magasin5,Adresse5,Ville5,75049,Region3
+6,Magasin6,Adresse6,Ville6,75037,Region4
+7,Magasin7,Adresse7,Ville7,75034,Region3
+8,Magasin8,Adresse8,Ville8,75056,Region2
+9,Magasin9,Adresse9,Ville9,75098,Region3
+10,Magasin10,Adresse10,Ville0,75064,Region3
