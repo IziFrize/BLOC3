@@ -10,35 +10,36 @@ RUN apt-get update && apt-get install -y \
     postgresql-client \
     && rm -rf /var/lib/apt/lists/*
 
-# Installer les dépendances Python
+# Installeur
 COPY requirements.txt requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copier tout le contenu du projet
+# Copier 
 COPY . .
 
-# Donner les bons droits aux scripts initdb
+# droits initdb
 RUN chmod +x /app/initdb/02_create_roles.sh
 RUN chmod +x /app/initdb/04_set_encryption_key.sh
 
-
-# 👉 Copier 04_set_encryption_key.sh au bon endroit pour PostgreSQL
+# Copier scripts SQL initdb
 COPY initdb/04_set_encryption_key.sh /docker-entrypoint-initdb.d/
-RUN chmod +x /docker-entrypoint-initdb.d/04_set_encryption_key.sh
-
-# 👉 Ajouter les triggers d’encryption auto
 COPY initdb/01_prepare_encryption_key.sql /docker-entrypoint-initdb.d/
 COPY initdb/05_create_encryption_triggers.sql /docker-entrypoint-initdb.d/
+RUN chmod +x /docker-entrypoint-initdb.d/04_set_encryption_key.sh
 
-# Donner les droits d'exécution aux scripts de démarrage
+# droits
 RUN chmod +x /app/wait-for-postgres.sh
 RUN chmod +x /app/entrypoint.sh
 
-# Créer le fichier de log pour cron
+# log cron
 RUN touch /var/log/cron.log
 
-# Charger le crontab
+# crontab
 RUN crontab /app/crontab.txt
 
-# Lancer le script Python après que PostgreSQL soit prêt, puis démarrer cron
-ENTRYPOINT ["/app/entrypoint.sh"]
+# Prometheus
+EXPOSE 8000
+
+
+CMD ["/bin/sh", "-c", "/app/entrypoint.sh"]
+

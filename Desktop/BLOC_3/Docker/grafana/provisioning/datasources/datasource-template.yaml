@@ -1,0 +1,21 @@
+apiVersion: 1
+
+datasources:
+  - name: SmartRetailDB
+    type: postgres
+    access: proxy
+    isDefault: true
+    editable: true
+    url: smartretail_db:5432
+    database: smartretail
+    user: admin
+    secureJsonData:
+      password: ${POSTGRES_PASSWORD}
+    jsonData:
+      sslmode: disable
+
+  - name: Prometheus
+    type: prometheus
+    access: proxy
+    url: http://smartretail_prometheus:9090
+    isDefault: false

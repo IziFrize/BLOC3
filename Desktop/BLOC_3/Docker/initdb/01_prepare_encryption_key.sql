@@ -1,6 +1,6 @@
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
--- 🔐 Fonction de chiffrement
+
 CREATE OR REPLACE FUNCTION encrypt_column(value TEXT)
 RETURNS BYTEA AS $$
 DECLARE
@@ -14,7 +14,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- 🔓 Fonction de déchiffrement
+
 CREATE OR REPLACE FUNCTION decrypt_column(data BYTEA)
 RETURNS TEXT AS $$
 DECLARE

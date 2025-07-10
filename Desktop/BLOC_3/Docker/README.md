@@ -1,71 +1,90 @@
-# 🛍️ SmartRetail Data Platform (Dockerized)
+# 🛍️ SmartRetail Data Platform – Infrastructure Sécurisée & Observabilité
 
 ## 📌 Objectif
-Ce projet simule une infrastructure de données pour un environnement de **retail intelligent**. Il charge automatiquement des données sensibles **chiffrées** dans PostgreSQL à l'aide de conteneurs Docker, puis crée des **vues déchiffrées sécurisées** prêtes à être utilisées dans des outils comme **Grafana**.
+
+Ce projet simule une infrastructure **industrialisable** de gestion de données pour une entreprise de **retail intelligent**. Elle répond aux exigences de :
+
+- **sécurité avancée (chiffrement RGPD)**,
+- **supervision technique (Prometheus + Grafana)**,
+- **automatisation du pipeline (injection + cron)**,
+- **résilience et évolutivité cloud-ready**.
 
 ---
 
-## 📁 Structure du projet
+## 🧱 Architecture du projet
 
 ```
 SmartRetail/
-├── data/                           # Fichiers CSV bruts (non chiffrés)
-│   ├── Clients.csv
-│   ├── Cartes_de_Fid_lit_.csv
-│   ├── ...
-├── initdb/                         # Scripts d'initialisation SQL & bash
-│   ├── 00_create_schema.sql        # Création des tables
-│   ├── 01_prepare_encryption_key.sql  # Fonctions SQL de chiffrement/déchiffrement
-│   ├── 02_create_roles.sh          # Création des rôles
-│   ├── 03_create_decryption_views.sql  # Vues déchiffrées
-│   ├── 04_set_encryption_key.sh    # Applique la clé au rôle
-│   ├── 05_create_encryption_triggers.sql # Triggers de chiffrement automatique
-├── insert_data.py                 # Script Python d’insertion des données
-├── Dockerfile                     # Image app Python (cron + client PostgreSQL)
-├── docker-compose.yml             # Démarrage des services
-├── entrypoint.sh                  # Exécution des tâches (insert + cron)
-├── crontab.txt                    # Planification de l’insertion (cron)
-├── requirements.txt               # Dépendances Python
-├── .gitignore
-├── .env                           # Contient la clé `ENCRYPTION_KEY`
-└── README.md
+├── data/                        # Données brutes (CSV)
+├── initdb/                      # Scripts SQL/Bash init (crypto, rôles, triggers)
+├── grafana/                     # Dashboards et provisioning
+├── prometheus/                  # Configuration Prometheus
+├── insert_data.py              # Insertion chiffrée des données
+├── metrics.py                  # Définition centralisée des métriques
+├── Dockerfile                  # Build de l'image app
+├── docker-compose.yml          # Orchestration des services
+├── .env                        # Variables d’environnement sensibles
+├── crontab.txt                 # Planification de l'injection via cron
+├── entrypoint.sh               # Lancement auto de l'app
+├── wait-for-postgres.sh        # Attente active de PostgreSQL
+└── README.md                   # ➡️ (ce fichier)
 ```
 
 ---
 
-## 🔐 Sécurité des données
+## 🔐 Sécurité & Conformité
 
-- **Chiffrement :** Toutes les colonnes sensibles (nom, email, etc.) sont chiffrées avec `pgcrypto` (AES-256).
-- **Clé unique** définie via la variable `ENCRYPTION_KEY` (dans `.env`) puis injectée dans PostgreSQL (`ALTER ROLE ... SET app.encryption_key`).
-- **Chiffrement automatique** : des *triggers SQL* encryptent chaque champ sensible à l’insertion.
-- **Vues sécurisées** : des vues `v_<table>_decrypted` permettent aux utilisateurs autorisés d’accéder aux données en clair (lecture seule).
+- **Chiffrement symétrique (pgcrypto + AES-256)** sur toutes les données sensibles.
+- **Clé d’encryption injectée** par variable d’environnement (`ENCRYPTION_KEY`) et appliquée au rôle `admin`.
+- **Triggers automatiques** pour crypter lors des `INSERT`/`UPDATE`.
+- **Vues SQL déchiffrées** accessibles uniquement aux rôles autorisés (`v_clients_decrypted`, etc.).
+- **Gestion des rôles** : `admin`, `app_user`, `writer`, `analyst`.
 
 ---
 
-## 🧪 Exécution locale
+## 🔁 Pipeline de Données
 
-### 📦 Lancer la plateforme :
+1. **CSV** → lu avec Pandas.
+2. **Insertion dans PostgreSQL** via `insert_data.py`.
+3. **Chiffrement automatique** via triggers.
+4. **Supervision de l’injection** via Prometheus.
+
+---
+
+## 📊 Supervision & Observabilité
+
+- `metrics.py` expose les métriques suivantes sur **port 8000** :
+  - `smartretail_runs_total`
+  - `smartretail_processing_duration_seconds`
+  - `smartretail_errors_total`
+  - `smartretail_last_insert_count`
+- **Prometheus** scrappe ces métriques.
+- **Grafana** (auto-provisionné) visualise les performances métier et système.
+
+---
+
+## ▶️ Lancer la plateforme
 
 ```bash
 docker-compose up --build
 ```
 
-Ce que fait cette commande :
-1. Construit l'image Python avec `cron` + `psql`
-2. Crée la base PostgreSQL et le schéma
-3. Active les fonctions et triggers de chiffrement
-4. Applique la clé de chiffrement
-5. Insère les données automatiquement
+Cela :
+- construit l’image de l’application,
+- initialise la base PostgreSQL (roles, clés, triggers, vues),
+- insère les données chiffrées,
+- expose les métriques,
+- active le monitoring (Grafana + Prometheus).
 
 ---
 
-### 🛠️ Accès à la base PostgreSQL
+## 🧪 Interagir avec PostgreSQL
 
 ```bash
 docker exec -it smartretail_db psql -U admin -d smartretail
 ```
 
-Puis, par exemple :
+**Exemples** :
 
 ```sql
 -- Voir les données chiffrées :
@@ -77,9 +96,9 @@ SELECT * FROM v_clients_decrypted LIMIT 5;
 
 ---
 
-## 🔁 Insertion automatique avec Cron
+## 🧬 Métriques & Cron
 
-Le conteneur Python lance périodiquement `insert_data.py` selon le `crontab.txt`. Tu peux voir les logs de cron avec :
+Le job cron relance périodiquement `insert_data.py` :
 
 ```bash
 docker exec -it smartretail_app tail -f /var/log/cron.log
@@ -87,58 +106,35 @@ docker exec -it smartretail_app tail -f /var/log/cron.log
 
 ---
 
-## 🔎 Triggers PostgreSQL actifs
+## 📈 Accès Grafana
 
-Les `triggers` encryptent les colonnes sensibles **à chaque INSERT**, par exemple :
-
-```sql
-CREATE TRIGGER encrypt_clients
-BEFORE INSERT ON clients
-FOR EACH ROW
-EXECUTE FUNCTION encrypt_clients_columns();
-```
+- URL : `http://localhost:3000`
+- Login par défaut : `admin` / `admin` (modifiable)
+- Datasources :
+  - PostgreSQL (données déchiffrées)
+  - Prometheus (métriques système + app)
 
 ---
 
-## 📈 À venir : intégration Grafana
+## ✅ Fonctionnalités réalisées
 
-Tu pourras :
-- Connecter Grafana à PostgreSQL (port 5432)
-- Lire directement les vues `v_*_decrypted`
-- Construire des dashboards en clair, sans exposer les données brutes
-
----
-
-## 🚧 Suggestions d'amélioration
-
-- ✅ Ajouter une **table `logs`** pour tracer les insertions
-- 📅 Ajouter la **date d’exécution** dans les données
-- 📊 Créer des dashboards Grafana par table
-- 🔐 Gestion des droits par rôle (lecture seule pour Grafana)
+- [x] Déploiement orchestré (Docker Compose)
+- [x] Sécurisation RGPD par chiffrement + rôles
+- [x] Ingestion automatique des données
+- [x] Supervision complète
+- [x] Observabilité en temps réel via Prometheus + Grafana
 
 ---
 
-## 🧰 Dépannage rapide
+## 💡 Améliorations possibles
 
-### Nettoyer l’environnement :
-
-```bash
-docker-compose down -v
-docker system prune -af
-docker volume prune -f
-```
-
-### Relancer proprement :
-
-```bash
-docker-compose up --build
-```
+- 🔔 Ajout d’un **système d’alertes Prometheus**
+- 📉 Calcul d’indicateurs métiers (chiffre d’affaires, fréquentation…)
+- ☁️ Déploiement sur AWS avec `EC2 + RDS + EFS`
+- 🔄 API REST en front de la base (FastAPI ?)
 
 ---
 
-## 👨‍💻 Auteurs
+## 👨‍🏫 Contexte pédagogique
 
-Projet réalisé dans le cadre du module **Sécurité & Données (B3)**.  
-Encadré par l’équipe pédagogique.
-
----
+Ce projet a été réalisé dans le cadre du bloc **"Industrialisation et maintenance de solution data"** de la certification **Data Engineer – RNCP 37624**.

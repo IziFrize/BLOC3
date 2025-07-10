@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-echo "👥 Création des rôles PostgreSQL..."
+echo "Création des rôles PostgreSQL..."
 
 psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-EOSQL
   DO \$\$

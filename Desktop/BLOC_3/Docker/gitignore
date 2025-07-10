@@ -37,3 +37,8 @@ build/
 # OS
 .DS_Store
 Thumbs.db
+# Logs générés
+/var/log/cron.log
+
+# Fichier généré automatiquement par script Grafana
+grafana/provisioning/datasources/datasource.yaml

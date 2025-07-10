@@ -70,8 +70,8 @@ CREATE TABLE log (
     table_name TEXT,
     operation TEXT,
     timestamp TIMESTAMP,
-    level TEXT,           -- ex: INFO, WARNING, ERROR
-    session_id UUID,      -- identifiant unique d’exécution
+    level TEXT,           
+    session_id UUID,      
     status TEXT,
     message TEXT
 );
